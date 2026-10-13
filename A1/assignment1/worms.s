@@ -366,6 +366,8 @@ wait_for_input_str_1:
 main:
 	# Subset:   0
 	#
+	# Description: Entry point. Runs setup(); if it fails returns 1, otherwise plays the game and returns 0.
+	#
 	# Frame:	[$ra]
 	# Uses:		[$v0]
 	# Clobbers: 	[$v0]
@@ -401,6 +403,8 @@ main__epilogue:
 	.text
 in_bounds:
 	# Subset:   0
+	#
+	# Description: Returns TRUE if the point (x, y) lies on the screen, otherwise FALSE.
 	#
 	# Frame:	[]
 	# Uses:		[$a0, $a1, $v0]
@@ -439,6 +443,8 @@ in_bounds__epilogue:
 get_input:
 	# Subset:   0
 	#
+	# Description: Prints the prompt string, then reads an integer from the user and returns it.
+	#
 	# Frame:	[]
 	# Uses:		[$a0, $v0]
 	# Clobbers: 	[$a0, $v0]
@@ -469,6 +475,8 @@ get_input__epilogue:
 	.text
 play:
 	# Subset:   0
+	#
+	# Description: Main game loop: performs turns until the game is over, then shows the end screen.
 	#
 	# Frame:	[$ra]
 	# Uses:		[$v0]
