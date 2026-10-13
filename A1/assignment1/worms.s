@@ -366,21 +366,33 @@ wait_for_input_str_1:
 main:
 	# Subset:   0
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Frame:	[$ra]
+	# Uses:		[$v0]
+	# Clobbers: 	[$v0]
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Locals:
+	#   - None
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Structure:
 	#   main
 	#   -> [prologue]
 	#	   -> body
 	#   -> [epilogue]
 main__prologue:
+	push	$ra
 main__body:
+	jal	setup			# if (setup() == ERROR) {
+	bne	$v0, ERROR, main__setup_ok
+					#
+	li	$v0, 1			#     return 1;
+	b	main__epilogue		#
+main__setup_ok:				# }
+
+	jal	play			# play();
+
+	li	$v0, 0			# return 0;
 main__epilogue:
+	pop	$ra
 	jr	$ra
 
 
@@ -390,24 +402,35 @@ main__epilogue:
 in_bounds:
 	# Subset:   0
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Frame:	[]
+	# Uses:		[$a0, $a1, $v0]
+	# Clobbers: 	[$v0]
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Locals:
+	#   - None
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Structure:
 	#   in_bounds
 	#   -> [prologue]
 	#	   -> body
+	#	      -> false
 	#   -> [epilogue]
 in_bounds__prologue:
 in_bounds__body:
+	blt	$a0, 0, in_bounds__false
+					# if (x >= 0 ...
+	bge	$a0, WIDTH, in_bounds__false
+					# ... && x < WIDTH ...
+	blt	$a1, 0, in_bounds__false
+					# ... && y >= 0 ...
+	bge	$a1, HEIGHT, in_bounds__false
+					# ... && y < HEIGHT) {
+	li	$v0, TRUE		#     return TRUE;
+	b	in_bounds__epilogue	# }
+in_bounds__false:
+	li	$v0, FALSE		# return FALSE;
 in_bounds__epilogue:
 	jr	$ra
-
-
 
 
 ################################################################################
@@ -416,20 +439,28 @@ in_bounds__epilogue:
 get_input:
 	# Subset:   0
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Frame:	[]
+	# Uses:		[$a0, $v0]
+	# Clobbers: 	[$a0, $v0]
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Locals:
+	#   - $v0: int input
 	#
-	# Structure:		<-- FILL THIS OUT!
-	#   play
+	# Structure:
+	#   get_input
 	#   -> [prologue]
 	#	   -> body
 	#   -> [epilogue]
 get_input__prologue:
 get_input__body:
+					# printf("%s", prompt);
+	li	$v0, 4			# (prompt is already in $a0)
+	syscall				#
+
+	li	$v0, 5			# scanf("%d", &input);
+	syscall				#
+
+					# return input; (already in $v0)
 get_input__epilogue:
 	jr	$ra
 
@@ -439,21 +470,36 @@ get_input__epilogue:
 play:
 	# Subset:   0
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Frame:	[$ra]
+	# Uses:		[$v0]
+	# Clobbers: 	[$v0]
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Locals:
+	#   - None
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Structure:
 	#   play
 	#   -> [prologue]
 	#	   -> body
+	#	      -> loop_cond
+	#	      -> loop_body
+	#	      -> loop_end
 	#   -> [epilogue]
 play__prologue:
+	push	$ra
 play__body:
-play__epilogue:
+play__loop_cond:
+	jal	game_over		# while (!game_over()) {
+	bnez	$v0, play__loop_end	#
+play__loop_body:
+	jal	do_something		#     do_something();
+	b	play__loop_cond		# }
+play__loop_end:
+
+	jal	render_end_screen	# render_end_screen();
+	jal	display			# display();
+play__epilogue:				# return;
+	pop	$ra
 	jr	$ra
 
 
