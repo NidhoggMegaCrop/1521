@@ -522,20 +522,53 @@ play__epilogue:				# return;
 render_background:
 	# Subset:   1
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Fills the whole screen with the background character.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[]
+	# Uses:		[$t0, $t1, $t2, $t3]
+	# Clobbers: 	[$t0, $t1, $t2, $t3]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $t0: int x
+	#   - $t1: int y
+	#   - $t2: offset of screen[y][x]
+	#   - $t3: BACKGROUND_CHAR
+	#
+	# Structure:
 	#   render_background
 	#   -> [prologue]
 	#	   -> body
+	#	      -> x_init, x_cond, x_body, x_step, x_end
+	#	      -> y_init, y_cond, y_body, y_step, y_end
 	#   -> [epilogue]
 render_background__prologue:
 render_background__body:
+render_background__x_init:
+	li	$t0, 0			# int x = 0;
+render_background__x_cond:
+	bge	$t0, WIDTH, render_background__x_end
+					# while (x < WIDTH) {
+render_background__x_body:
+render_background__y_init:
+	li	$t1, 0			#     int y = 0;
+render_background__y_cond:
+	bge	$t1, HEIGHT, render_background__y_end
+					#     while (y < HEIGHT) {
+render_background__y_body:
+	mul	$t2, $t1, WIDTH		#         screen[y][x] = BACKGROUND_CHAR;
+	add	$t2, $t2, $t0		#
+	li	$t3, BACKGROUND_CHAR	#
+	sb	$t3, screen($t2)	#
+render_background__y_step:
+	add	$t1, $t1, 1		#         y++;
+	b	render_background__y_cond
+					#     }
+render_background__y_end:
+render_background__x_step:
+	add	$t0, $t0, 1		#     x++;
+	b	render_background__x_cond
+					# }
+render_background__x_end:
 render_background__epilogue:
 	jr	$ra
 
@@ -545,20 +578,53 @@ render_background__epilogue:
 game_over:
 	# Subset:   1
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Returns TRUE if one or fewer worms are still alive, otherwise FALSE.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[]
+	# Uses:		[$v0, $t0, $t1, $t2]
+	# Clobbers: 	[$v0, $t0, $t1, $t2]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $t0: int alive_worms
+	#   - $t1: int i
+	#   - $t2: temporary (nworms / &worms[i].alive / worms[i].alive)
+	#
+	# Structure:
 	#   game_over
 	#   -> [prologue]
 	#	   -> body
+	#	      -> loop_init, loop_cond, loop_body, loop_step, loop_end
+	#	      -> game_not_over
 	#   -> [epilogue]
 game_over__prologue:
 game_over__body:
+	li	$t0, 0			# int alive_worms = 0;
+
+game_over__loop_init:
+	li	$t1, 0			# int i = 0;
+game_over__loop_cond:
+	lw	$t2, nworms		# while (i < nworms) {
+	bge	$t1, $t2, game_over__loop_end
+					#
+game_over__loop_body:
+	mul	$t2, $t1, SIZEOF_WORM	#     if (worms[i].alive) {
+	lw	$t2, worms + WORM_ALIVE_OFFSET($t2)
+					#
+	beqz	$t2, game_over__loop_step
+					#
+	add	$t0, $t0, 1		#         alive_worms++;
+					#     }
+game_over__loop_step:
+	add	$t1, $t1, 1		#     i++;
+	b	game_over__loop_cond	# }
+game_over__loop_end:
+
+	bgt	$t0, 1, game_over__not_over
+					# if (alive_worms <= 1) {
+	li	$v0, TRUE		#     return TRUE;
+	b	game_over__epilogue	# }
+game_over__not_over:
+	li	$v0, FALSE		# return FALSE;
 game_over__epilogue:
 	jr	$ra
 
@@ -568,23 +634,62 @@ game_over__epilogue:
 aim:
 	# Subset:   1
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Rotates the active worm's aim one step in the given direction (wrapping around), then redraws the screen.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[$ra]
+	# Uses:		[$a0, $t0, $t1]
+	# Clobbers: 	[$a0, $t0, $t1]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $a0: int direction
+	#   - $t0: active_worm * SIZEOF_WORM (offset of the active worm)
+	#   - $t1: worms[active_worm].aim
+	#
+	# Structure:
 	#   aim
 	#   -> [prologue]
 	#	   -> body
+	#	      -> clockwise, anticlockwise
+	#	      -> wrap_high, wrap_low, wrapped
 	#   -> [epilogue]
 aim__prologue:
+	push	$ra
 aim__body:
-aim__epilogue:
-	jr	$ra
+	lw	$t0, active_worm	# int a = worms[active_worm].aim;
+	mul	$t0, $t0, SIZEOF_WORM	#
+	lw	$t1, worms + WORM_AIM_OFFSET($t0)
+					#
 
+	bne	$a0, CLOCKWISE, aim__anticlockwise
+					# if (direction == CLOCKWISE) {
+aim__clockwise:
+	add	$t1, $t1, 1		#     a++;
+	b	aim__range_check	#
+aim__anticlockwise:			# } else {
+	sub	$t1, $t1, 1		#     a--;
+					# }
+aim__range_check:
+	ble	$t1, MAX_AIM_VALUE, aim__wrap_low_check
+					# if (a > MAX_AIM_VALUE) {
+aim__wrap_high:
+	li	$t1, 0			#     a = 0;
+	b	aim__wrapped		#
+aim__wrap_low_check:			# } else if (a < 0) {
+	bge	$t1, 0, aim__wrapped	#
+aim__wrap_low:
+	li	$t1, MAX_AIM_VALUE	#     a = MAX_AIM_VALUE;
+					# }
+aim__wrapped:
+	sw	$t1, worms + WORM_AIM_OFFSET($t0)
+					# worms[active_worm].aim = a;
+
+	li	$a0, TRUE		# render(TRUE);
+	jal	render			#
+
+	jal	display			# display();
+aim__epilogue:
+	pop	$ra
+	jr	$ra
 
 ################################################################################
 # .TEXT <render_worms>
@@ -592,20 +697,51 @@ aim__epilogue:
 render_worms:
 	# Subset:   1
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Draws every living worm onto the screen buffer.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[]
+	# Uses:		[$t0, $t1, $t2, $t3, $t4]
+	# Clobbers: 	[$t0, $t1, $t2, $t3, $t4]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $t0: int i
+	#   - $t1: temporary (nworms / i * SIZEOF_WORM)
+	#   - $t2: temporary (worms[i].alive / worms[i].pos.y)
+	#   - $t3: worms[i].pos.x
+	#   - $t4: WORM_CHAR
+	#
+	# Structure:
 	#   render_worms
 	#   -> [prologue]
 	#	   -> body
+	#	      -> loop_init, loop_cond, loop_body, loop_step, loop_end
 	#   -> [epilogue]
 render_worms__prologue:
 render_worms__body:
+render_worms__loop_init:
+	li	$t0, 0			# int i = 0;
+render_worms__loop_cond:
+	lw	$t1, nworms		# while (i < nworms) {
+	bge	$t0, $t1, render_worms__loop_end
+					#
+render_worms__loop_body:
+	mul	$t1, $t0, SIZEOF_WORM	#     if (worms[i].alive) {
+	lw	$t2, worms + WORM_ALIVE_OFFSET($t1)
+					#
+	beqz	$t2, render_worms__loop_step
+					#
+	lw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+					#         screen[worms[i].pos.y][worms[i].pos.x] = WORM_CHAR;
+	lw	$t3, worms + WORM_POS_OFFSET + POINT_X_OFFSET($t1)
+					#
+	mul	$t2, $t2, WIDTH		#
+	add	$t2, $t2, $t3		#
+	li	$t4, WORM_CHAR		#
+	sb	$t4, screen($t2)	#     }
+render_worms__loop_step:
+	add	$t0, $t0, 1		#     i++;
+	b	render_worms__loop_cond	# }
+render_worms__loop_end:
 render_worms__epilogue:
 	jr	$ra
 
