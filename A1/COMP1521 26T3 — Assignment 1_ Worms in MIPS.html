@@ -1,0 +1,1165 @@
+<!DOCTYPE html>
+<!-- saved from url=(0091)https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assessment-%2Ddue-date -->
+<html lang="en"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <title>
+        COMP1521 26T3 —
+        
+Assignment 1: Worms in MIPS
+
+    </title><link rel="canonical" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/">
+
+    <link rel="stylesheet" href="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/bootstrap.min.css" integrity="sha256-aAr2Zpq8MZ+YA/D6JtRD3xtrwpEz2IqOS+pWD/7XKIw=" crossorigin="anonymous">
+    <link rel="stylesheet" href="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/course.css">
+
+    <script src="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/jquery.min.js.下载" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+    <script src="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/popper.min.js.下载" integrity="sha256-/ijcOLwFf26xEYAjW75FizKVo5tnTYiQddPZoLUHHZ8=" crossorigin="anonymous"></script>
+    <script src="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/bootstrap.min.js.下载" integrity="sha256-OFRAJNoaD8L3Br5lglV7VyLRf0itmoBzWUoM+Sji4/8=" crossorigin="anonymous"></script>
+
+    <script src="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/course.js.下载"></script>
+
+    <link rel="icon" type="image/png" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/flask.cgi/static/favicon.ico?21571789035672.4882824=">
+
+    <!-- <script async src="https://static.codepen.io/assets/embed/ei.js"></script> -->
+
+    <!-- MathJax. -->
+    
+
+    
+<link rel="stylesheet" href="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/bootstrap-toc.min.css">
+<!-- add after bootstrap.min.js -->
+<script src="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/bootstrap-toc.min.js.下载"></script>
+
+
+    
+<script type="text/javascript" async="" src="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/MathJax.js.下载"></script><style type="text/css">.MathJax_Hover_Frame {border-radius: .25em; -webkit-border-radius: .25em; -moz-border-radius: .25em; -khtml-border-radius: .25em; box-shadow: 0px 0px 15px #83A; -webkit-box-shadow: 0px 0px 15px #83A; -moz-box-shadow: 0px 0px 15px #83A; -khtml-box-shadow: 0px 0px 15px #83A; border: 1px solid #A6D ! important; display: inline-block; position: absolute}
+.MathJax_Menu_Button .MathJax_Hover_Arrow {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 4px; -webkit-border-radius: 4px; -moz-border-radius: 4px; -khtml-border-radius: 4px; font-family: 'Courier New',Courier; font-size: 9px; color: #F0F0F0}
+.MathJax_Menu_Button .MathJax_Hover_Arrow span {display: block; background-color: #AAA; border: 1px solid; border-radius: 3px; line-height: 0; padding: 4px}
+.MathJax_Hover_Arrow:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_Hover_Arrow:hover span {background-color: #CCC!important}
+</style><style type="text/css">#MathJax_About {position: fixed; left: 50%; width: auto; text-align: center; border: 3px outset; padding: 1em 2em; background-color: #DDDDDD; color: black; cursor: default; font-family: message-box; font-size: 120%; font-style: normal; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; border-radius: 15px; -webkit-border-radius: 15px; -moz-border-radius: 15px; -khtml-border-radius: 15px; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_About.MathJax_MousePost {outline: none}
+.MathJax_Menu {position: absolute; background-color: white; color: black; width: auto; padding: 2px; border: 1px solid #CCCCCC; margin: 0; cursor: default; font: menu; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; z-index: 201; box-shadow: 0px 10px 20px #808080; -webkit-box-shadow: 0px 10px 20px #808080; -moz-box-shadow: 0px 10px 20px #808080; -khtml-box-shadow: 0px 10px 20px #808080; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+.MathJax_MenuItem {padding: 2px 2em; background: transparent}
+.MathJax_MenuArrow {position: absolute; right: .5em; padding-top: .25em; color: #666666; font-size: .75em}
+.MathJax_MenuActive .MathJax_MenuArrow {color: white}
+.MathJax_MenuArrow.RTL {left: .5em; right: auto}
+.MathJax_MenuCheck {position: absolute; left: .7em}
+.MathJax_MenuCheck.RTL {right: .7em; left: auto}
+.MathJax_MenuRadioCheck {position: absolute; left: 1em}
+.MathJax_MenuRadioCheck.RTL {right: 1em; left: auto}
+.MathJax_MenuLabel {padding: 2px 2em 4px 1.33em; font-style: italic}
+.MathJax_MenuRule {border-top: 1px solid #CCCCCC; margin: 4px 1px 0px}
+.MathJax_MenuDisabled {color: GrayText}
+.MathJax_MenuActive {background-color: Highlight; color: HighlightText}
+.MathJax_MenuDisabled:focus, .MathJax_MenuLabel:focus {background-color: #E8E8E8}
+.MathJax_ContextMenu:focus {outline: none}
+.MathJax_ContextMenu .MathJax_MenuItem:focus {outline: none}
+#MathJax_AboutClose {top: .2em; right: .2em}
+.MathJax_Menu .MathJax_MenuClose {top: -10px; left: -10px}
+.MathJax_MenuClose {position: absolute; cursor: pointer; display: inline-block; border: 2px solid #AAA; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; font-family: 'Courier New',Courier; font-size: 24px; color: #F0F0F0}
+.MathJax_MenuClose span {display: block; background-color: #AAA; border: 1.5px solid; border-radius: 18px; -webkit-border-radius: 18px; -moz-border-radius: 18px; -khtml-border-radius: 18px; line-height: 0; padding: 8px 0 6px}
+.MathJax_MenuClose:hover {color: white!important; border: 2px solid #CCC!important}
+.MathJax_MenuClose:hover span {background-color: #CCC!important}
+.MathJax_MenuClose:hover:focus {outline: none}
+</style><style type="text/css">.MathJax_Preview .MJXf-math {color: inherit!important}
+</style><style type="text/css">.MJX_Assistive_MathML {position: absolute!important; top: 0; left: 0; clip: rect(1px, 1px, 1px, 1px); padding: 1px 0 0 0!important; border: 0!important; height: 1px!important; width: 1px!important; overflow: hidden!important; display: block!important; -webkit-touch-callout: none; -webkit-user-select: none; -khtml-user-select: none; -moz-user-select: none; -ms-user-select: none; user-select: none}
+.MJX_Assistive_MathML.MJX_Assistive_MathML_Block {width: 100%!important}
+</style><style type="text/css">#MathJax_Zoom {position: absolute; background-color: #F0F0F0; overflow: auto; display: block; z-index: 301; padding: .5em; border: 1px solid black; margin: 0; font-weight: normal; font-style: normal; text-align: left; text-indent: 0; text-transform: none; line-height: normal; letter-spacing: normal; word-spacing: normal; word-wrap: normal; white-space: nowrap; float: none; -webkit-box-sizing: content-box; -moz-box-sizing: content-box; box-sizing: content-box; box-shadow: 5px 5px 15px #AAAAAA; -webkit-box-shadow: 5px 5px 15px #AAAAAA; -moz-box-shadow: 5px 5px 15px #AAAAAA; -khtml-box-shadow: 5px 5px 15px #AAAAAA; filter: progid:DXImageTransform.Microsoft.dropshadow(OffX=2, OffY=2, Color='gray', Positive='true')}
+#MathJax_ZoomOverlay {position: absolute; left: 0; top: 0; z-index: 300; display: inline-block; width: 100%; height: 100%; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+#MathJax_ZoomFrame {position: relative; display: inline-block; height: 0; width: 0}
+#MathJax_ZoomEventTrap {position: absolute; left: 0; top: 0; z-index: 302; display: inline-block; border: 0; padding: 0; margin: 0; background-color: white; opacity: 0; filter: alpha(opacity=0)}
+</style><style type="text/css">.MathJax_Preview {color: #888}
+#MathJax_Message {position: fixed; left: 1em; bottom: 1.5em; background-color: #E6E6E6; border: 1px solid #959595; margin: 0px; padding: 2px 8px; z-index: 102; color: black; font-size: 80%; width: auto; white-space: nowrap}
+#MathJax_MSIE_Frame {position: absolute; top: 0; left: 0; width: 0px; z-index: 101; border: 0px; margin: 0px; padding: 0px}
+.MathJax_Error {color: #CC0000; font-style: italic}
+</style><style type="text/css">.MJXp-script {font-size: .8em}
+.MJXp-right {-webkit-transform-origin: right; -moz-transform-origin: right; -ms-transform-origin: right; -o-transform-origin: right; transform-origin: right}
+.MJXp-bold {font-weight: bold}
+.MJXp-italic {font-style: italic}
+.MJXp-scr {font-family: MathJax_Script,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-frak {font-family: MathJax_Fraktur,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-sf {font-family: MathJax_SansSerif,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-cal {font-family: MathJax_Caligraphic,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-mono {font-family: MathJax_Typewriter,'Times New Roman',Times,STIXGeneral,serif}
+.MJXp-largeop {font-size: 150%}
+.MJXp-largeop.MJXp-int {vertical-align: -.2em}
+.MJXp-math {display: inline-block; line-height: 1.2; text-indent: 0; font-family: 'Times New Roman',Times,STIXGeneral,serif; white-space: nowrap; border-collapse: collapse}
+.MJXp-display {display: block; text-align: center; margin: 1em 0}
+.MJXp-math span {display: inline-block}
+.MJXp-box {display: block!important; text-align: center}
+.MJXp-box:after {content: " "}
+.MJXp-rule {display: block!important; margin-top: .1em}
+.MJXp-char {display: block!important}
+.MJXp-mo {margin: 0 .15em}
+.MJXp-mfrac {margin: 0 .125em; vertical-align: .25em}
+.MJXp-denom {display: inline-table!important; width: 100%}
+.MJXp-denom > * {display: table-row!important}
+.MJXp-surd {vertical-align: top}
+.MJXp-surd > * {display: block!important}
+.MJXp-script-box > *  {display: table!important; height: 50%}
+.MJXp-script-box > * > * {display: table-cell!important; vertical-align: top}
+.MJXp-script-box > *:last-child > * {vertical-align: bottom}
+.MJXp-script-box > * > * > * {display: block!important}
+.MJXp-mphantom {visibility: hidden}
+.MJXp-munderover, .MJXp-munder {display: inline-table!important}
+.MJXp-over {display: inline-block!important; text-align: center}
+.MJXp-over > * {display: block!important}
+.MJXp-munderover > *, .MJXp-munder > * {display: table-row!important}
+.MJXp-mtable {vertical-align: .25em; margin: 0 .125em}
+.MJXp-mtable > * {display: inline-table!important; vertical-align: middle}
+.MJXp-mtr {display: table-row!important}
+.MJXp-mtd {display: table-cell!important; text-align: center; padding: .5em 0 0 .5em}
+.MJXp-mtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-mlabeledtr {display: table-row!important}
+.MJXp-mlabeledtr > .MJXp-mtd:first-child {padding-left: 0}
+.MJXp-mlabeledtr:first-child > .MJXp-mtd {padding-top: 0}
+.MJXp-merror {background-color: #FFFF88; color: #CC0000; border: 1px solid #CC0000; padding: 1px 3px; font-style: normal; font-size: 90%}
+.MJXp-scale0 {-webkit-transform: scaleX(.0); -moz-transform: scaleX(.0); -ms-transform: scaleX(.0); -o-transform: scaleX(.0); transform: scaleX(.0)}
+.MJXp-scale1 {-webkit-transform: scaleX(.1); -moz-transform: scaleX(.1); -ms-transform: scaleX(.1); -o-transform: scaleX(.1); transform: scaleX(.1)}
+.MJXp-scale2 {-webkit-transform: scaleX(.2); -moz-transform: scaleX(.2); -ms-transform: scaleX(.2); -o-transform: scaleX(.2); transform: scaleX(.2)}
+.MJXp-scale3 {-webkit-transform: scaleX(.3); -moz-transform: scaleX(.3); -ms-transform: scaleX(.3); -o-transform: scaleX(.3); transform: scaleX(.3)}
+.MJXp-scale4 {-webkit-transform: scaleX(.4); -moz-transform: scaleX(.4); -ms-transform: scaleX(.4); -o-transform: scaleX(.4); transform: scaleX(.4)}
+.MJXp-scale5 {-webkit-transform: scaleX(.5); -moz-transform: scaleX(.5); -ms-transform: scaleX(.5); -o-transform: scaleX(.5); transform: scaleX(.5)}
+.MJXp-scale6 {-webkit-transform: scaleX(.6); -moz-transform: scaleX(.6); -ms-transform: scaleX(.6); -o-transform: scaleX(.6); transform: scaleX(.6)}
+.MJXp-scale7 {-webkit-transform: scaleX(.7); -moz-transform: scaleX(.7); -ms-transform: scaleX(.7); -o-transform: scaleX(.7); transform: scaleX(.7)}
+.MJXp-scale8 {-webkit-transform: scaleX(.8); -moz-transform: scaleX(.8); -ms-transform: scaleX(.8); -o-transform: scaleX(.8); transform: scaleX(.8)}
+.MJXp-scale9 {-webkit-transform: scaleX(.9); -moz-transform: scaleX(.9); -ms-transform: scaleX(.9); -o-transform: scaleX(.9); transform: scaleX(.9)}
+.MathJax_PHTML .noError {vertical-align: ; font-size: 90%; text-align: left; color: black; padding: 1px 3px; border: 1px solid}
+</style></head>
+<body class="d-flex flex-column" style="min-height: 100vh;" data-new-gr-c-s-check-loaded="14.1336.0" data-gr-ext-installed=""><div id="MathJax_Message" style="display: none;"></div>
+<nav class="navbar fixed-top navbar-expand-lg navbar-dark no-print" id="header-navbar">
+    <div class="container">
+        <a class="navbar-brand" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/">
+            COMP1521 - 26T3
+        </a>
+        <button class="navbar-toggler navbar-toggler-right" type="button" data-toggle="collapse" data-target="#navmenu" aria-controls="navmenu" aria-label="Toggle navigation" aria-expanded="false">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="navmenu">
+            <ul class="navbar-nav mr-auto">
+                
+                    
+                        <li class="nav-item active">
+                            <a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/outline/">
+                                Outline
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item active">
+                            <a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/timetable/">
+                                Timetable
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item active">
+                            <a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/help-sessions/">
+                                Help Sessions
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item active">
+                            <a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/resources/forum.html">
+                                Forum
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item active">
+                            <a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/student/">
+                                Submissions
+                            </a>
+                        </li>
+                    
+                        <li class="nav-item active">
+                            <a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html">
+                                Assignment 1
+                            </a>
+                        </li>
+                    
+                    
+                    
+                
+            </ul>
+        </div>
+    </div>
+</nav>
+<main class="container" aria-label="Content" style="flex: 1; padding-top: 4rem;">
+    
+
+        <header>
+            
+                <h1 class="text-center">
+Assignment 1: Worms in MIPS
+</h1>
+            
+        </header>
+
+        
+<style>
+    h1::before,h2::before {
+      content: '';
+      display: block;
+      height:      50px;
+      margin-top: -50px;
+      visibility: hidden;
+    }
+
+    #toc {
+      position: -webkit-sticky; /* Safari */
+      position: sticky;
+      top: 70px;
+    }
+
+    main[aria-label="Content"] {
+        max-width: 70rem;
+    }
+</style>
+
+<div class="row" id="assignment-body">
+<div class="col-lg-10 col-12">
+
+
+
+
+
+
+
+
+
+
+
+
+
+<aside class="note">
+    <!-- <p>🚧 Construction Zone: Video Coming Soon 🚧</p> -->
+    <p>You may find the <a href="https://www.youtube.com/watch?v=mNvvGNJDxLY">Assignment 1 Overview Video</a> to be a good starting point:</p>
+    <iframe width="560" height="315" src="./COMP1521 26T3 — Assignment 1_ Worms in MIPS_files/mNvvGNJDxLY.html" title="COMP1521 26T3 Assignment 1 Overview" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" referrerpolicy="strict-origin-when-cross-origin" allowfullscreen=""></iframe>
+</aside>
+
+
+<h2 id="aims">Aims</h2>
+<ul>
+    <li> to give you experience writing MIPS assembly code </li>
+    <li> to give you experience translating C to MIPS </li>
+    <li> to give you experience with data and control structures in MIPS </li>
+</ul>
+
+
+<!-- =============================================================== -->
+<h2 id="getting-started">Getting Started</h2>
+
+<p>
+    Create a new directory for this assignment
+    called <code>worms</code>,
+    change to this directory,
+    and fetch the provided code
+    by running these commands:
+</p>
+
+<pre is="tty"><kbd is="sh">mkdir -m 700 worms</kbd>
+<kbd is="sh">cd worms</kbd>
+<kbd is="sh">1521 fetch worms</kbd>
+</pre>
+
+<p>
+    If you're not working at CSE,
+    you can download the provided files
+    as a <a href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/provided.zip">zip file</a>
+    or a <a href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/provided.tar">tar file</a>.
+</p>
+
+<p>
+    This will add the following files into the directory:
+</p>
+
+<ul>
+    <li> <code>worms.s</code>: a <a href="https://en.wikipedia.org/wiki/Wikipedia:Stub">stub</a> MIPS assembly file to complete. </li>
+    <li> <code>worms.c</code>: a reference implementation of worms in C. </li>
+    <li> <code>worms.simple.c</code>: a copy of the reference implementation of worms, for you to simplify. </li>
+    <li> <code>input.txt</code>: example input file. </li>
+    <li> <code>worms.mk</code>: a <cite><a title="man 1 make" href="https://manpages.debian.org/jump?q=make.1">make</a></cite> fragment for compiling <code>worms.c</code>. </li>
+</ul>
+
+<!-- =============================================================== -->
+<h2 id="worms-the-game"> Worms: The Game</h2>
+
+<p>
+    Worms is an basic terminal implementation of <a href="https://en.wikipedia.org/wiki/Worms_(series)">Worms</a> game 
+    originally made by Team17.
+</p>
+<p>
+    In Worms, players play as worms on a desctructible map, shooting projectiles at each other to attempt to force each other to fall out of the map.
+</p> 
+
+<p>
+    The provided C program (and eventually, your MIPS translation) implement the following commands:
+    </p><ul>
+        <li>
+            <strong><code>a/d</code></strong> to move worms left/right. Worms can climb up one block automatically. 
+        </li>
+        <li>
+            <strong><code>e/q</code></strong> to adjust a worm's aim clockwise/anticlockwise.
+        </li>
+        <li>
+            <strong><code>f</code></strong> to fire a projectile.
+        </li>
+        <li>
+            <strong><code>[/]</code></strong> to increase or decrease firing strength.
+        </li>
+        <li>
+            <strong><code>s</code></strong> to surrender.
+        </li>
+    </ul>
+    Worms is finished when only one or fewer worms survive.
+<p></p>
+
+<p>
+    To get a feel for this game, try it out in a terminal:
+</p> 
+
+<pre is="tty"><kbd is="sh">dcc worms.c -o worms</kbd>
+<kbd is="sh">./worms</kbd>
+</pre>
+
+<p></p>
+
+    You should read through <code>worms.c</code>.
+    There are comments throughout it
+    that should help you understand
+    what the program is doing
+    <sup style="white-space:nowrap">[<i><a href="https://imgs.xkcd.com/comics/wikipedian_protester.png" target="_blank"><span title="This claim needs references to reliable sources.">citation needed</span></a></i>]</sup>
+    — which you'll need for the next part of the assignment.
+<p></p>
+
+<!-- =============================================================== -->
+<h2 id="worms-s-the-assignment">worms.s: The Assignment</h2>
+
+<p>
+Your task in the assignment is to translate the provided <code>worms.c</code> program into MIPS assembly. 
+</p><p>
+You have to add code to the provided <code>worms.s</code> file so that it executes exactly the same as <code>worms.c</code>.
+</p><p>
+Any modifications to the <code>.data</code> section  are <strong>NOT PERMITTED</strong>, and will break <code>autotest</code>.
+</p><p>
+All global variables and strings are already present in the provided <code>.data</code> section.
+</p>
+<p>
+You are permitted to add new constants if you would like to, but you're not required to do so.
+
+</p><p>
+You have to implement the following functions in MIPS assembly:
+
+</p><ul>
+    <li> <code>main</code> </li>
+    <li> <code>in_bounds</code> </li>
+    <li> <code>get_input</code> </li>
+    <li> <code>play</code> </li>
+
+    <li> <code>render_background</code> </li>
+    <li> <code>game_over</code> </li>
+    <li> <code>aim</code> </li>
+    <li> <code>render_worms</code> </li>
+
+    <li> <code>overlaps_with_terrain</code> </li>
+    <li> <code>move</code> </li>
+    <li> <code>render_projectile</code> </li>
+
+    <li> <code>fire</code> </li>
+    <li> <code>render_end_screen</code> </li>
+    <li> <code>print_rgb</code> </li>
+</ul>
+<p></p>
+
+<p>
+The remaining functions have already been translated to MIPS assembly for you.
+
+</p><p>
+    You <strong>MUST</strong> obey the MIPS calling conventions discussed in lectures.
+</p>
+<p>
+    When translating functions calls, you should avoid making assumptions about any side effects of the called function.
+</p>
+<p>
+    If you make assumptions about the behaviour of called functions that are not made in the provided C implementation, you
+    may be penalised.
+</p>
+
+<p></p>
+
+<h3 id="subsets">Subsets</h3>
+
+<p>
+    This assignment is split into four subsets. Later subsets
+    will involve more complex translation.
+</p>
+
+<style>
+    .subset-table td {
+        vertical-align: middle;
+        border-top: 1px solid black;
+        padding: 5px;
+    }
+    .subset-table ul {
+        margin-bottom: 0px;
+        text-align: left;
+    }
+    .subset-table {
+        text-align: center;
+    }
+</style>
+
+<table class="subset-table">
+    <thead>
+        <tr>
+            <th>Subset</th>
+            <th>Functions</th>
+            <th>Performance Weight</th>
+        </tr>
+    </thead>
+    <tbody>
+        <tr>
+            <td>Subset 0</td>
+            <td><ul>
+    <li> <code>main</code> </li>
+    <li> <code>in_bounds</code> </li>
+    <li> <code>get_input</code> </li>
+    <li> <code>play</code> </li>
+            </ul></td>
+            <td>30%</td>
+        </tr>
+
+        <tr>
+            <td>Subset 1</td>
+            <td><ul>
+    <li> <code>render_background</code> </li>
+    <li> <code>game_over</code> </li>
+    <li> <code>aim</code> </li>
+    <li> <code>render_worms</code> </li>
+            </ul></td>
+            <td>25%</td>
+        </tr>
+
+        <tr>
+            <td>Subset 2</td>
+            <td><ul>
+    <li> <code>overlaps_with_terrain</code> </li>
+    <li> <code>move</code> </li>
+    <li> <code>render_projectile</code> </li>
+            </ul></td>
+            <td>25%</td>
+        </tr>
+        
+        <tr>
+            <td>Subset 3</td>
+            <td><ul>
+    <li> <code>fire</code> </li>
+    <li> <code>render_end_screen</code> </li>
+    <li> <code>print_rgb</code> </li>
+                <li> whole program autotesting</li>
+            </ul></td>
+            <td>20%</td>
+        </tr>
+    </tbody>
+</table>
+<p>
+    Please note that the weighting for Subset 3 includes whole program tests.
+</p>
+
+<h3 id="running-testing">Running &amp; Testing</h3>
+
+<p>
+To run your MIPS code, simply enter the following in your terminal:
+</p><pre is="tty"><kbd is="sh">1521 mipsy worms.s</kbd>
+</pre>
+<p></p>
+
+<h4>Recommended testing approach</h4>
+The recommended approach to testing is using <strong>Function tests</strong> to determine
+whether your code is correct as you progress through the assignment.
+<p>
+After you have completed all the functions and are passing all of the <strong>Function tests</strong>,
+it is recommended to use the <strong>Whole program tests</strong> to determine if your solution has any
+bugs not picked up by autotest. 
+</p><p>
+It is particularly common to find bugs relating to your conformance to the MIPS
+calling convention in Subset 3 (use of clobbered register, overwriting saved register), as the provided autotests
+for Subset 3 do not check for this.
+
+</p><h4>Automated testing</h4>
+<p>
+    There are two types of autotests for this assignment:
+    </p><ol>
+        <li>Whole program tests</li>
+        <li>Function tests</li>
+    </ol>
+<p></p>
+
+<p>
+    <strong>Whole program tests</strong> run your entire <code>worms.s</code>
+    file and compare the observed output against the expected output. These tests
+    are generally not practical until most or all of your functions have been
+    implemented in MIPS.
+</p>
+
+<p>
+    <strong>Function tests</strong> only test individual functions from <code>worms.s</code>.
+    These tests isolate a function and run it separately to the rest of your solution. 
+    
+        For example, you can test the <code>main</code> function with:
+
+        </p><pre is="tty"><kbd is="sh">1521 autotest worms main</kbd></pre>
+
+        The result of this test is based entirely on the implementation of the
+        <code>main</code> function. It does not depend on the correctness of any
+        other functions that <code>main</code> calls, such as <code>setup</code>
+         or <code>play</code>.
+<p></p>
+
+<h4>Manual Testing</h4>
+
+<p>
+The game takes a lot of input,
+so it's a good idea to write a file with the input you want to test,
+and then pipe that into your program using the shell commands below.
+</p>
+
+<p>
+You have been given a file called <code>input.txt</code>
+to use for this.
+
+</p><pre is="tty"><kbd is="sh_comment">&gt;&gt; compile the C implementation &lt;&lt;</kbd>
+<kbd is="sh">dcc worms.c -o worms</kbd>
+<kbd is="sh_comment">&gt;&gt; run the C implementation with the inputs in input.txt, storing output in c.out &lt;&lt;</kbd>
+<kbd is="sh">cat input.txt | ./worms | tee c.out</kbd>
+<kbd is="sh_comment">&gt;&gt; run the your mips implementation with the inputs in input.txt, storing output in mips.out &lt;&lt;</kbd>
+<kbd is="sh">cat input.txt | 1521 mipsy worms.s | tee mips.out</kbd>
+<kbd is="sh_comment">&gt;&gt; automatically compare the two output files and report differences &lt;&lt;</kbd>
+<kbd is="sh">diff -s c.out mips.out</kbd>
+Files c.out and mips.out are identical
+</pre>
+<p></p>
+
+<p>
+    Try this with different sequences of inputs (with different inputs stored inside <code>input.txt</code>).
+</p>
+
+<p>
+    You are not required to use this testing method if it is too confusing. Inputting manually is perfectly fine, it is just a bit tedious.
+</p>
+
+<aside class="note">
+    <p>
+        ⚠️ See the <a href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assessment" target="_blank">Testing</a> section for full details, including simpler ways to test your solution.
+    </p>
+</aside>
+
+<h4>Simplified C code</h4>
+<p>
+    You are encouraged to simplify your C code
+    to remove any loop constructs and if-else
+    statements, and test that your simplified
+    code works correctly before translating it
+    to MIPS, in a separate file
+    <code>worms.simple.c</code>.
+</p>
+<p>
+    This file will not be marked - you do not need
+    to submit it.
+</p>
+<p>
+    In order to allow you to check that your
+    simplified code works correctly, we have provided
+    a simple set of automated tests.
+</p>
+
+<p>
+    You can run these tests by running the following
+    command:
+</p>
+
+<pre is="tty"><kbd is="sh">1521 autotest worms.simple</kbd>
+</pre>
+
+<h2 id="hints">Hints</h2>
+
+<ul class="list-unstyled">
+    <li>
+        <p>
+            You should implement all the functions from one subset
+            before moving on to the next.
+        </p>
+    </li>
+    <li>
+        <p>
+            You may find the provided function implementations to be
+            useful guidance for your implementation including comments,
+            label names, indentation and register usage.
+        </p>
+    </li>
+</ul>
+
+<!-- =============================================================== -->
+<h2 id="assumptions-clarifications-and-restrictions">Assumptions, Clarifications, and Restrictions</h2>
+<p>
+        Like all good programmers,
+        you should make as few assumptions as possible.
+</p>
+<ul>
+    <li><p>
+        Your submitted code must be <b>hand-written MIPS assembly</b>,
+        which you yourself have written.
+        <br>
+        You may not submit code in other languages.
+        <br>
+        You may not submit compiled output.
+    </p></li>
+    <li><p>
+        You may <b>not</b> copy a solution from an online source. <abbr>e.g.</abbr> GitHub.
+    </p></li>
+    <li><p>
+        Your functions will be tested individually.
+        They must exactly match the behaviour of the
+        corresponding C function and they must follow
+        the MIPS calling conventions described below.    </p></li>
+    <li><p>
+        You may assume the input provided to <code>worms.s</code>
+        will be correctly formatted. For example, where a number
+        is expected the input will not be a letter.
+    </p></li>
+    <li><p>
+        The C code defines constants using <code>#define</code>. Your MIPS
+        translation should use the corresponding provided named constants,
+        in the places where a <code>#define</code> is used in the C code.
+        You should not use a <code>#define</code> constant in your MIPS translation
+        if it is not used in the corresponding part of the C code.
+    </p></li>
+    <!-- <li><p>
+        In the <code>get_direction</code> function, you may assume
+        that all user input consists of either empty lines, or lines
+        with exactly one ASCII character. You do not need to handle
+        end-of-file.
+    </p></li> -->
+    <li><p>
+        There will be a correctness penalty
+        for assignments that do not follow
+        standard MIPS calling conventions including:
+    </p><ul>
+        <li><p>
+                Function arguments are passed in
+                registers <code>$a0</code>..<code>$a3</code>.
+        </p></li>
+        <li><p>
+                Function return values are passed in
+                register <code>$v0</code>
+        </p></li>
+        <li><p>
+                Values in registers <code>$s0</code>..<code>$s7</code>
+                are preserved across function calls.
+                <br>
+                If a function changes these registers,
+                it must restore the original value before returning.
+        </p></li>
+        <li><p>
+                The only registers' values that can be relied upon
+                across a function call are <code>$s0</code>..<code>$s7</code>,
+                <code>$gp</code>, <code>$sp</code>, and <code>$fp</code>.
+                <br>
+                All other registers must be assumed to be have
+                an undefined value after a function call,
+                except <code>$v0</code> which has the function return value.
+        </p></li>
+    </ul></li>
+    <li><p>
+        If you need clarification on
+        what you can and cannot use or do for this assignment,
+        ask in the class forum.
+    </p></li>
+    <li><p>
+        You are required to submit
+        intermediate versions of your assignment.
+        See below for details.
+    </p></li>
+</ul>
+
+
+
+
+
+
+
+
+
+<h2 id="assessment" class="mt-5">Assessment</h2>
+
+
+<h3 id="assessment--testing">Testing</h3>
+We have provided some automated tests to help you check the correctness
+of your translation. To run all the provided tests, execute the following command:
+
+<pre is="tty"><kbd is="sh">1521 autotest worms</kbd>
+</pre>
+
+Some of these tests check only a specific function, and some test your whole program.
+To run all the tests for a specific function, pass the name of the
+function to <code>autotest</code>. For example, to run all the tests for
+the <code>main</code> function, run the command:
+
+<pre is="tty"><kbd is="sh">1521 autotest worms main</kbd>
+</pre>
+
+You can also run all the autotests for a particular subset. For example,
+to run all the autotests for subset 1, run the command:
+
+<pre is="tty"><kbd is="sh">1521 autotest worms S1</kbd>
+</pre>
+
+To run the autotests which test your program as a whole, run the command:
+
+<pre is="tty"><kbd is="sh">1521 autotest worms whole_prog</kbd>
+</pre>
+
+Some tests are more complex than others. If you are failing more than one test,
+you are encouraged to focus on solving the first of those failing tests. To do so,
+you can run a specific test by giving its name to the <code>autotest</code> command:
+<pre is="tty"><kbd is="sh">1521 autotest worms main_S0_0</kbd>
+</pre>
+
+
+<aside class="warning">
+    <p>
+        Whilst we can detect that errors have occurred,
+        it is often substantially harder to explain what that error was.
+        <br>
+        The errors from <code>1521 autotest</code>
+        will be less clear and useful than in labs.
+        <br>
+        You will need to do your own debugging and analysis.
+    </p>
+    <p>
+        <code>1521 autotest</code> will not test everything.
+        You are strongly encouraged to do your own testing. The provided
+        autotests are less comprehensive for later subsets.
+    </p>
+</aside>
+
+
+<aside class="danger">
+    While the function autotests for subsets 0, 1 and 2 check
+    for your conformance to the MIPS calling convention ('strict'
+    autotests), the subset 3 autotests will not check whether
+    your code follows the MIPS calling convention. However, the marking
+    tests <b>will</b> check for conformance to the MIPS calling
+    convention. This means that it is important that you check
+    yourself that your code follows the MIPS calling convention, particularly
+    for your subset 3 code.
+</aside>
+
+
+
+<h3 id="assessment--submission">Submission</h3>
+<p>
+When you are finished working on the assignment,
+you must submit your work by running <code>give</code>:
+
+
+</p><pre is="tty"><kbd is="sh">give cs1521 ass1_worms worms.s</kbd>
+</pre>
+
+
+<p>
+You must run <code>give</code> before <strong>Week 5 Friday    18:00:00</strong>
+to obtain the marks for this assignment.
+Note that this is an individual exercise,
+the work you submit with <code>give</code> must be entirely your own.
+
+</p><p>
+You can run <code>give</code> multiple times.<br>
+Only your last submission will be marked.
+
+</p><p>
+If you are working at home, you may find it more convenient
+to upload your work via
+<a href="https://cgi.cse.unsw.edu.au/~give/Student/give.php">give's web interface</a>.
+
+</p><p>
+You <em>cannot</em> obtain marks by emailing your code to tutors or lecturers.
+
+</p><p>
+You can check your latest submission on CSE servers with:
+</p><pre is="tty"><kbd is="sh">1521 classrun check ass1_worms</kbd>
+</pre>
+
+<p>
+You can check the files you have submitted <a href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/student/">here</a>.
+
+</p><p>
+Manual marking will be done by your tutor,
+who will mark for style and readability,
+as described in the <strong>Assessment</strong> section below.
+After your tutor has assessed your work,
+you can <a href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/student/">view your results here</a>;
+The resulting mark will also be available
+<a href="https://cgi.cse.unsw.edu.au/~give/Student/sturec.php">via give's web interface</a>.
+
+
+
+
+</p><h3 id="assessment--due-date" class="mt-5">Due Date</h3>
+<p>
+This assignment is due <strong>Week 5 Friday    18:00:00</strong> (2026-10-16 18:00:00).
+</p><p>
+The UNSW standard late penalty for assessment is 5% per day for 5 days - this is implemented hourly for this assignment.
+</p><p>
+Your assignment mark will be reduced by 0.2% for each hour (or part thereof) late past the submission deadline.
+</p><p>
+For example,
+if an assignment worth 60% was submitted half an hour late,
+it would be awarded 59.8%, whereas if it was submitted past 10 hours late,
+it would be awarded 57.8%.
+</p><p>
+Beware - submissions 5 or more days late will receive zero marks.
+This again is the UNSW standard assessment policy.
+
+
+
+</p><h3 id="assessment-scheme" class="mt-5">Assessment Scheme</h3>
+<p>
+    This assignment will contribute
+    <strong>15</strong> marks
+    to your final COMP1521 mark.
+</p><p>
+    80% of the marks for assignment 1
+    will come from the performance of your code
+    on a large series of tests.
+</p><p>
+    20% of the marks for assignment 1
+    will come from hand marking.
+    These marks will be awarded on the basis of
+    clarity, commenting, elegance and style.
+    In other words, you will be assessed on
+    how easy it is for a human to read and understand your program.
+</p>
+
+<p>
+    An indicative assessment scheme for performance follows.
+    <br>
+    The lecturer may vary the assessment scheme
+    after inspecting the assignment submissions,
+    but it is likely to be broadly similar to the following:
+</p>
+<table class="table table-sm w-75 mx-auto">
+<tbody>
+    <tr>
+        <th scope="row">100% for performance</th>
+        <td>
+            implements all behaviours perfectly,<br>
+            following the spec exactly.
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">85% for performance</th>
+        <td>
+            implements all simple and most difficult functions
+            correctly.
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">65% for performance</th>
+        <td>
+            implements all simple and<br>
+            some moderate difficulty functions correctly.
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">≤ 50% for performance</th>
+        <td>
+            good progress,<br>
+            simple functions work correctly.
+        </td>
+    </tr>
+</tbody>
+</table>
+<p>
+    An indicative assessment scheme for style follows.
+    <br>
+    The lecturer may vary the assessment scheme
+    after inspecting the assignment submissions,
+    but it is likely to be broadly similar to the following:
+</p>
+<table class="table table-sm w-75 mx-auto">
+<tbody>
+    <tr>
+        <th scope="row">100% for style</th>
+        <td>perfect style</td>
+    </tr>
+    <tr>
+        <th scope="row">90% for style</th>
+        <td>great style, almost all style characteristics perfect.</td>
+    </tr>
+    <tr>
+        <th scope="row">80% for style</th>
+        <td>good style, one or two style characteristics not well done.</td>
+    </tr>
+    <tr>
+        <th scope="row">70% for style</th>
+        <td>good style, a few style characteristics not well done.</td>
+    </tr>
+    <tr>
+        <th scope="row">60% for style</th>
+        <td>ok style, an attempt at most style characteristics.</td>
+    </tr>
+    <tr>
+        <th scope="row">≤ 50% for style</th>
+        <td>an attempt at style.</td>
+    </tr>
+</tbody>
+</table>
+<p>
+    An indicative style rubric follows.
+    <br>
+    The lecturer may vary the assessment scheme
+    after inspecting the assignment submissions,
+    but it is likely to be broadly similar to the following:
+</p>
+<ul>
+    <li>
+        Formatting <strong>(8/20)</strong>:
+        <ul>
+            <li>Whitespace</li>
+            <li>Indentation (consistent, tabs or spaces are okay)</li>
+            <li>Line length (below 180 characters unless very exceptional)</li>
+            <li>Line breaks (using vertical whitespace to improve readability)</li>
+        </ul>
+    </li>
+    <li>
+        Documentation <strong>(12/20)</strong>:
+        <ul>
+            <li>Header comment (with name, zID, description of program)</li>
+            <li>Function comments (above each function with a description)</li>
+            <li>Sensible commenting throughout the code</li>
+            <li>Descriptive label names, indicating structure</li>
+        </ul>
+    </li>
+</ul>
+<p>
+    Note that the following penalties apply to your total mark for plagiarism:
+</p>
+<table class="table table-sm w-75 mx-auto">
+<tbody>
+    <tr>
+        <th scope="row">0 for <br> assignment 1</th>
+        <td>
+            knowingly providing your work to anyone
+            <br>
+            and it is subsequently submitted (by anyone).
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">0 FL for <br> COMP1521</th>
+        <td>
+            submitting any other person's work; this includes joint work.
+        </td>
+    </tr>
+    <tr>
+        <th scope="row">academic <br> misconduct</th>
+        <td>
+            submitting another person's work without their consent;
+            <br>
+            paying another person to do work for you.
+        </td>
+    </tr>
+</tbody>
+</table>
+
+
+
+
+<h3 id="assessment--intermediate-versions-of-work" class="mt-5">Intermediate Versions of Work</h3>
+<p>
+You are required to submit intermediate versions of your assignment.
+</p><p>
+Every time you work on the assignment
+and make some progress
+you should copy your work to your CSE account
+and submit it using the <code>give</code> command above.
+It is fine if intermediate versions do not compile
+or otherwise fail submission tests.
+Only the final submitted version of your assignment will be marked.
+
+
+
+</p><h3 id="assignment-conditions" class="mt-5">Assignment Conditions</h3>
+<ul>
+<li><p>
+<strong>Joint work</strong> is <strong>not permitted</strong> on this assignment.
+</p><p>
+This is an individual assignment.
+The work you submit must be entirely your own work:
+submission of work even partly written by
+any other person is not permitted.
+
+</p><p>
+Do not request help from anyone
+other than the teaching staff of COMP1521 —
+for example, in the course forum, or in help sessions.
+
+</p><p>
+Do not post your assignment code to the course forum.
+The teaching staff can view code
+you have recently submitted with give,
+or recently autotested.
+
+</p><p>
+Assignment submissions are routinely examined
+both automatically and manually
+for work written by others.
+
+</p><p>
+<em>Rationale:</em>
+this assignment is designed to
+develop the individual skills needed
+to produce an entire working program.
+Using code written by, or taken from, other people
+will stop you learning these skills.
+Other CSE courses focus on skills needed for working in a team.
+
+</p></li><li><p>
+The use of <strong>code-synthesis tools</strong>,
+such as <strong>GitHub Copilot</strong>, <strong>ChatGPT</strong>, <strong>Google Gemini</strong>, etc.
+are <strong>not permitted</strong> on this assignment.
+
+</p><p>
+<em>Rationale:</em>
+this assignment is designed to develop your understanding of basic concepts.
+Using synthesis tools will stop you learning these fundamental concepts,
+which will significantly impact your ability to complete future courses.
+
+</p></li><li><p>
+<strong>Sharing, publishing, or distributing</strong>
+your assignment work is <strong>not permitted</strong>.
+
+</p><p>
+Do not provide or show your assignment work to any other person,
+other than the teaching staff of COMP1521.
+For example, do not message your work to friends.
+
+</p><p>
+Do not publish your assignment code via the Internet.
+For example, do not place your assignment in a public GitHub repository.
+
+</p><p>
+<em>Rationale:</em>
+by publishing or sharing your work,
+you are facilitating other students using your work.
+If other students find your assignment work
+and submit part or all of it as their own work,
+you may become involved in an academic integrity investigation.
+
+</p></li><li><p>
+<strong>Sharing, publishing, or distributing</strong>
+your assignment work
+after the completion of COMP1521
+is <strong>not permitted</strong>.
+
+</p><p>
+For example, do not place your assignment in a public GitHub repository
+after this offering of COMP1521 is over.
+
+</p><p>
+<em>Rationale:</em>
+COMP1521 may reuse assignment themes
+covering similar concepts and content.
+If students in future terms find your assignment work
+and submit part or all of it as their own work,
+you may become involved in an academic integrity investigation.
+</p></li></ul>
+
+<p>
+Violation of any of the above conditions
+may result in an academic integrity investigation,
+with possible penalties
+up to and including a mark of 0 in COMP1521,
+and exclusion from future studies at UNSW.
+For more information,
+read the <a href="https://www.gs.unsw.edu.au/policy/documents/studentcodepolicy.pdf">UNSW Student Code</a>,
+or contact <a href="mailto:cs1521@cse.unsw.edu.au">the course account</a>.
+
+
+
+</p></div> <!-- big col -->
+<div class="d-none d-lg-block col-lg-2">
+    <nav id="toc" data-toggle="toc"><ul class="nav navbar-nav"><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#aims">Aims</a></li><li><a class="nav-link active" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#getting-started">Getting Started</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#worms-the-game"> Worms: The Game</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#worms-s-the-assignment">worms.s: The Assignment</a><ul class="nav navbar-nav"><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#subsets">Subsets</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#running-testing">Running &amp; Testing</a></li></ul></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#hints">Hints</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assumptions-clarifications-and-restrictions">Assumptions, Clarifications, and Restrictions</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assessment">Assessment</a><ul class="nav navbar-nav"><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assessment--testing">Testing</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assessment--submission">Submission</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assessment--due-date">Due Date</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assessment-scheme">Assessment Scheme</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assessment--intermediate-versions-of-work">Intermediate Versions of Work</a></li><li><a class="nav-link" href="https://cgi.cse.unsw.edu.au/~cs1521/26T3/assignments/ass1/index.html#assignment-conditions">Assignment Conditions</a></li></ul></li></ul></nav>
+</div>
+
+</div> <!-- big row -->
+
+<script>
+    $(function() {
+    var navSelector = "#toc";
+    var $myNav = $(navSelector);
+    Toc.init($myNav);
+    $("body").scrollspy({
+      target: navSelector
+    });
+  });
+
+// This code ensures the ToC will also change tabs as necessary.
+
+window.addEventListener('hashchange', () => accessRightSection());
+async function accessRightSection() {
+    const id =  `#subsets_${location.hash.split(".")[0].split('#')[1]}`;
+    const tabButton = document.querySelector(`a.nav-link[href="${id}"][role="tab"]`);
+    if (tabButton) {
+        tabButton.click();
+        tabButton.scrollIntoView();
+        await new Promise(r => setTimeout(r, 200));
+        window.location.assign(location.hash);
+    }
+}
+</script>
+
+
+
+
+    
+</main>
+<footer class="mt-3 pt-3 bg-dark text-center no-print">
+    <p class="text-muted">
+        <strong>COMP1521 26T3: Computer Systems Fundamentals</strong>
+        is brought to you by <br>
+        the <a href="https://www.cse.unsw.edu.au/">School of Computer Science and Engineering</a><br>
+        at the <a href="https://www.unsw.edu.au/">University of New South Wales</a>, Sydney.<br>
+        For all enquiries, please email the class account at
+        <a href="mailto:cs1521@cse.unsw.edu.au">cs1521@cse.unsw.edu.au</a><br>
+
+        <small>CRICOS Provider 00098G</small>
+    </p>
+
+    
+</footer>
+
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true" style="visibility: visible !important;"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>
