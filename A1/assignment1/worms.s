@@ -13,7 +13,6 @@
 ##                                                                                   ##
 ## Leave this header comment incomplete at your PERIL!	                             ##
 ##                                                                                   ##
-## Note: the use of AI to generate code is NOT PERMITTED for this assignment!!!      ##
 
 #
 #
