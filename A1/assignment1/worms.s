@@ -140,6 +140,12 @@ PROJECTILE_DX_OFFSET = PROJECTILE_TRAIL_LENGTH_OFFSET + SIZEOF_INT
 PROJECTILE_DY_OFFSET = PROJECTILE_DX_OFFSET + SIZEOF_INT
 SIZEOF_PROJECTILE = PROJECTILE_DY_OFFSET + SIZEOF_INT
 
+# Added constants: combined offsets, so a label can be used with a single "+"
+WORM_POS_X_OFFSET = WORM_POS_OFFSET + POINT_X_OFFSET
+WORM_POS_Y_OFFSET = WORM_POS_OFFSET + POINT_Y_OFFSET
+PROJECTILE_POS_X_OFFSET = PROJECTILE_POS_OFFSET + POINT_X_OFFSET
+PROJECTILE_POS_Y_OFFSET = PROJECTILE_POS_OFFSET + POINT_Y_OFFSET
+
 	.data
 
 ###################################
@@ -730,9 +736,9 @@ render_worms__loop_body:
 					#
 	beqz	$t2, render_worms__loop_step
 					#
-	lw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+	lw	$t2, worms + WORM_POS_Y_OFFSET($t1)
 					#         screen[worms[i].pos.y][worms[i].pos.x] = WORM_CHAR;
-	lw	$t3, worms + WORM_POS_OFFSET + POINT_X_OFFSET($t1)
+	lw	$t3, worms + WORM_POS_X_OFFSET($t1)
 					#
 	mul	$t2, $t2, WIDTH		#
 	add	$t2, $t2, $t3		#
@@ -875,7 +881,7 @@ move__dx_set:
 
 	lw	$t1, active_worm	# int new_x = worms[active_worm].pos.x + dx;
 	mul	$t1, $t1, SIZEOF_WORM	#
-	lw	$t2, worms + WORM_POS_OFFSET + POINT_X_OFFSET($t1)
+	lw	$t2, worms + WORM_POS_X_OFFSET($t1)
 					#
 	add	$s0, $t2, $t0		#
 
@@ -887,7 +893,7 @@ move__blocked_check:
 	lw	$t1, active_worm	# if (collides_with_terrain(new_x, worms[active_worm].pos.y) != NO_TERRAIN) {
 	mul	$t1, $t1, SIZEOF_WORM	#
 	move	$a0, $s0		#
-	lw	$a1, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+	lw	$a1, worms + WORM_POS_Y_OFFSET($t1)
 					#
 	jal	collides_with_terrain	#
 	beq	$v0, NO_TERRAIN, move__update_x
@@ -896,7 +902,7 @@ move__blocked_check:
 move__climb:
 	lw	$t1, active_worm	#     if (worms[active_worm].pos.y > 0 ...
 	mul	$t1, $t1, SIZEOF_WORM	#
-	lw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+	lw	$t2, worms + WORM_POS_Y_OFFSET($t1)
 					#
 	blez	$t2, move__epilogue	#     ... else { return; }
 
@@ -908,16 +914,16 @@ move__climb:
 
 	lw	$t1, active_worm	#         worms[active_worm].pos.y--;
 	mul	$t1, $t1, SIZEOF_WORM	#
-	lw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+	lw	$t2, worms + WORM_POS_Y_OFFSET($t1)
 					#
 	sub	$t2, $t2, 1		#
-	sw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+	sw	$t2, worms + WORM_POS_Y_OFFSET($t1)
 					#     }
 					# }
 move__update_x:
 	lw	$t1, active_worm	# worms[active_worm].pos.x = new_x;
 	mul	$t1, $t1, SIZEOF_WORM	#
-	sw	$s0, worms + WORM_POS_OFFSET + POINT_X_OFFSET($t1)
+	sw	$s0, worms + WORM_POS_X_OFFSET($t1)
 					#
 
 	jal	let_worms_fall		# let_worms_fall();
