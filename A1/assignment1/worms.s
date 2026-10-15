@@ -1043,23 +1043,97 @@ render_projectile__epilogue:
 fire:
 	# Subset:   3
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Fires the active worm's projectile, animating it until it collides, records the impact, then lets worms fall and moves to the next turn.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[$ra, $s0]
+	# Uses:		[$a0, $v0, $t0, $t1, $t2, $s0]
+	# Clobbers: 	[$a0, $v0, $t0, $t1, $t2]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $s0: int turn
+	#   - $t0: int nimpacts / temporary
+	#   - $t1: offset of impacts[nimpacts]
+	#   - $t2: temporary (projectile.pos.x / projectile.pos.y)
+	#
+	# Structure:
 	#   fire
 	#   -> [prologue]
 	#	   -> body
+	#	      -> loop_body, loop_cond
+	#	      -> impacts_full, impacts_ok
+	#	      -> next_turn_skip
 	#   -> [epilogue]
 fire__prologue:
+	push	$ra
+	push	$s0
 fire__body:
-fire__epilogue:
-	jr	$ra
+	la	$a0, projectile		# init_projectile(&projectile);
+	jal	init_projectile		#
 
+fire__loop_body:			# do {
+	li	$a0, FALSE		#     render(FALSE);
+	jal	render			#
+
+	la	$a0, projectile		#     render_projectile(&projectile);
+	jal	render_projectile	#
+
+	jal	display			#     display();
+
+	jal	wait_for_input		#     wait_for_input();
+fire__loop_cond:
+	la	$a0, projectile		# } while (move_projectile(&projectile) != COLLIDED);
+	jal	move_projectile		#
+	bne	$v0, COLLIDED, fire__loop_body
+					#
+
+	lw	$t0, nimpacts		# if (nimpacts == MAX_IMPACTS) {
+	bne	$t0, MAX_IMPACTS, fire__impacts_ok
+					#
+fire__impacts_full:
+	la	$a0, fire_str_1		#     printf("error: out of memory\n");
+	li	$v0, 4			#
+	syscall				#
+
+	li	$a0, 1			#     exit(1);
+	li	$v0, 17			#
+	syscall				#
+fire__impacts_ok:			# }
+
+	lw	$t0, nimpacts		# impacts[nimpacts++] = projectile.pos;
+	mul	$t1, $t0, SIZEOF_POINT	#
+	lw	$t2, projectile + PROJECTILE_POS_OFFSET + POINT_X_OFFSET
+					#
+	sw	$t2, impacts + POINT_X_OFFSET($t1)
+					#
+	lw	$t2, projectile + PROJECTILE_POS_OFFSET + POINT_Y_OFFSET
+					#
+	sw	$t2, impacts + POINT_Y_OFFSET($t1)
+					#
+	add	$t0, $t0, 1		#
+	sw	$t0, nimpacts		#
+
+	li	$a0, FALSE		# render(FALSE);
+	jal	render			#
+
+	jal	display			# display();
+
+	lw	$s0, active_worm	# int turn = active_worm;
+	jal	let_worms_fall		# let_worms_fall();
+
+	lw	$t0, active_worm	# if (turn == active_worm) {
+	bne	$s0, $t0, fire__next_turn_skip
+					#
+	jal	next_turn		#     next_turn();
+fire__next_turn_skip:			# }
+
+	li	$a0, TRUE		# render(TRUE);
+	jal	render			#
+
+	jal	display			# display();
+fire__epilogue:
+	pop	$s0
+	pop	$ra
+	jr	$ra
 
 ################################################################################
 # .TEXT <render_end_screen>
@@ -1067,21 +1141,121 @@ fire__epilogue:
 render_end_screen:
 	# Subset:   3
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Clears the screen buffer and writes "Game Over!" and the winner's message into its middle.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[$ra, $s0]
+	# Uses:		[$a0, $a1, $a2, $v0, $t0, $t1, $s0]
+	# Clobbers: 	[$a0, $a1, $a2, $v0, $t0, $t1]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $s0: int winner
+	#   - $t0: temporary (nworms / worms[winner].alive)
+	#   - $t1: temporary (winner * SIZEOF_PTR)
+	#
+	# Structure:
 	#   render_end_screen
 	#   -> [prologue]
 	#	   -> body
+	#	      -> winner_init, winner_cond, winner_body, winner_step, winner_end
+	#	      -> noone_wins, copy_message
 	#   -> [epilogue]
 render_end_screen__prologue:
+	push	$ra
+	push	$s0
 render_end_screen__body:
+	jal	render_background	# render_background();
+
+render_end_screen__winner_init:
+	li	$s0, 0			# int winner = 0;
+render_end_screen__winner_cond:
+	lw	$t0, nworms		# while (winner < nworms) {
+	bge	$s0, $t0, render_end_screen__winner_end
+					#
+render_end_screen__winner_body:
+	mul	$t0, $s0, SIZEOF_WORM	#     if (worms[winner].alive) {
+	lw	$t0, worms + WORM_ALIVE_OFFSET($t0)
+					#
+	bnez	$t0, render_end_screen__winner_end
+					#         break;
+					#     }
+render_end_screen__winner_step:
+	add	$s0, $s0, 1		#     winner++;
+	b	render_end_screen__winner_cond
+					# }
+render_end_screen__winner_end:
+
+	la	$a0, screen + (HEIGHT / 2) * WIDTH + WIDTH / 2 - 5
+					# memcpy(&screen[HEIGHT / 2][WIDTH / 2 - 5], "Game Over!", 10);
+	la	$a1, render_end_screen_str_1
+					#
+	li	$a2, 10			#
+	jal	copy_bytes		#
+
+	lw	$t0, nworms		# winner == nworms ? "NOONE wins! " : msg_for_worm[winner]
+	bne	$s0, $t0, render_end_screen__someone_wins
+					#
+render_end_screen__noone_wins:
+	la	$a1, render_end_screen_str_2
+					#
+	b	render_end_screen__copy_message
+					#
+render_end_screen__someone_wins:
+	mul	$t1, $s0, SIZEOF_PTR	#
+	lw	$a1, msg_for_worm($t1)	#
+render_end_screen__copy_message:
+	la	$a0, screen + (HEIGHT / 2 + 2) * WIDTH + WIDTH / 2 - 5
+					# memcpy(&screen[HEIGHT / 2 + 2][WIDTH / 2 - 5], ..., 12);
+	li	$a2, 12			#
+	jal	copy_bytes		#
 render_end_screen__epilogue:
+	pop	$s0
+	pop	$ra
+	jr	$ra
+
+
+################################################################################
+# .TEXT <copy_bytes>
+	.text
+copy_bytes:
+	# Subset:   3 (helper for render_end_screen, equivalent to memcpy)
+	#
+	# Description: Copies len bytes from src to dst.
+	#
+	# Frame:	[]
+	# Uses:		[$a0, $a1, $a2, $t0, $t1, $t2]
+	# Clobbers: 	[$t0, $t1, $t2]
+	#
+	# Locals:
+	#   - $a0: char *dst
+	#   - $a1: const char *src
+	#   - $a2: unsigned long len
+	#   - $t0: int i
+	#   - $t1: byte being copied / address of src[i]
+	#   - $t2: address of dst[i]
+	#
+	# Structure:
+	#   copy_bytes
+	#   -> [prologue]
+	#	   -> body
+	#	      -> loop_init, loop_cond, loop_body, loop_step, loop_end
+	#   -> [epilogue]
+copy_bytes__prologue:
+copy_bytes__body:
+copy_bytes__loop_init:
+	li	$t0, 0			# int i = 0;
+copy_bytes__loop_cond:
+	bge	$t0, $a2, copy_bytes__loop_end
+					# while (i < len) {
+copy_bytes__loop_body:
+	add	$t1, $a1, $t0		#     dst[i] = src[i];
+	lb	$t1, ($t1)		#
+	add	$t2, $a0, $t0		#
+	sb	$t1, ($t2)		#
+copy_bytes__loop_step:
+	add	$t0, $t0, 1		#     i++;
+	b	copy_bytes__loop_cond	# }
+copy_bytes__loop_end:
+copy_bytes__epilogue:
 	jr	$ra
 
 ################################################################################
@@ -1090,23 +1264,120 @@ render_end_screen__epilogue:
 print_rgb:
 	# Subset:   3
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Prints character c in the colour (r, g, b) using an ANSI escape sequence.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[$ra, $s0, $s1, $s2, $s3]
+	# Uses:		[$a0, $v0, $s0, $s1, $s2, $s3]
+	# Clobbers: 	[$a0, $v0]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $s0: char c
+	#   - $s1: int r
+	#   - $s2: int g
+	#   - $s3: int b
+	#
+	# Structure:
 	#   print_rgb
 	#   -> [prologue]
 	#	   -> body
 	#   -> [epilogue]
 print_rgb__prologue:
+	push	$ra
+	push	$s0
+	push	$s1
+	push	$s2
+	push	$s3
 print_rgb__body:
+	move	$s0, $a0		# (keep the arguments across the calls)
+	move	$s1, $a1		#
+	move	$s2, $a2		#
+	move	$s3, $a3		#
+
+	la	$a0, print_rgb_str_1	# printf("\x1b[38;2;");
+	li	$v0, 4			#
+	syscall				#
+
+	move	$a0, $s1		# printf("%03d", r);
+	jal	print_three_digits	#
+
+	li	$a0, ';'		# printf(";");
+	li	$v0, 11			#
+	syscall				#
+
+	move	$a0, $s2		# printf("%03d", g);
+	jal	print_three_digits	#
+
+	li	$a0, ';'		# printf(";");
+	li	$v0, 11			#
+	syscall				#
+
+	move	$a0, $s3		# printf("%03d", b);
+	jal	print_three_digits	#
+
+	li	$a0, 'm'		# printf("m");
+	li	$v0, 11			#
+	syscall				#
+
+	move	$a0, $s0		# printf("%c", c);
+	li	$v0, 11			#
+	syscall				#
+
+	la	$a0, print_rgb_str_2	# printf("\x1b[0m");
+	li	$v0, 4			#
+	syscall				#
 print_rgb__epilogue:
+	pop	$s3
+	pop	$s2
+	pop	$s1
+	pop	$s0
+	pop	$ra
 	jr	$ra
 
+
+################################################################################
+# .TEXT <print_three_digits>
+	.text
+print_three_digits:
+	# Subset:   3 (helper for print_rgb)
+	#
+	# Description: Prints value as a decimal number, padded on the left with 0s to 3 digits (like printf("%03d", value)).
+	#
+	# Frame:	[]
+	# Uses:		[$a0, $v0, $t0]
+	# Clobbers: 	[$a0, $v0, $t0]
+	#
+	# Locals:
+	#   - $t0: int value
+	#
+	# Structure:
+	#   print_three_digits
+	#   -> [prologue]
+	#	   -> body
+	#	      -> pad_tens, pad_done
+	#   -> [epilogue]
+print_three_digits__prologue:
+print_three_digits__body:
+	move	$t0, $a0		# (syscalls below overwrite $a0)
+
+	bge	$t0, 100, print_three_digits__pad_done
+					# if (value < 100) {
+	li	$a0, '0'		#     putchar('0');
+	li	$v0, 11			#
+	syscall				#
+
+	bge	$t0, 10, print_three_digits__pad_done
+					#     if (value < 10) {
+	li	$a0, '0'		#         putchar('0');
+	li	$v0, 11			#
+	syscall				#
+					#     }
+print_three_digits__pad_done:		# }
+
+	move	$a0, $t0		# printf("%d", value);
+	li	$v0, 1			#
+	syscall				#
+print_three_digits__epilogue:
+	jr	$ra
 
 ##############
 ## PROVIDED ##
