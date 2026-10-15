@@ -140,6 +140,12 @@ PROJECTILE_DX_OFFSET = PROJECTILE_TRAIL_LENGTH_OFFSET + SIZEOF_INT
 PROJECTILE_DY_OFFSET = PROJECTILE_DX_OFFSET + SIZEOF_INT
 SIZEOF_PROJECTILE = PROJECTILE_DY_OFFSET + SIZEOF_INT
 
+# Added constants: combined offsets, so a label can be used with a single "+"
+WORM_POS_X_OFFSET = WORM_POS_OFFSET + POINT_X_OFFSET
+WORM_POS_Y_OFFSET = WORM_POS_OFFSET + POINT_Y_OFFSET
+PROJECTILE_POS_X_OFFSET = PROJECTILE_POS_OFFSET + POINT_X_OFFSET
+PROJECTILE_POS_Y_OFFSET = PROJECTILE_POS_OFFSET + POINT_Y_OFFSET
+
 	.data
 
 ###################################
@@ -730,9 +736,9 @@ render_worms__loop_body:
 					#
 	beqz	$t2, render_worms__loop_step
 					#
-	lw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+	lw	$t2, worms + WORM_POS_Y_OFFSET($t1)
 					#         screen[worms[i].pos.y][worms[i].pos.x] = WORM_CHAR;
-	lw	$t3, worms + WORM_POS_OFFSET + POINT_X_OFFSET($t1)
+	lw	$t3, worms + WORM_POS_X_OFFSET($t1)
 					#
 	mul	$t2, $t2, WIDTH		#
 	add	$t2, $t2, $t3		#
