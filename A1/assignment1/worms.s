@@ -146,6 +146,10 @@ WORM_POS_Y_OFFSET = WORM_POS_OFFSET + POINT_Y_OFFSET
 PROJECTILE_POS_X_OFFSET = PROJECTILE_POS_OFFSET + POINT_X_OFFSET
 PROJECTILE_POS_Y_OFFSET = PROJECTILE_POS_OFFSET + POINT_Y_OFFSET
 
+# Added constants: where render_end_screen writes its messages, as offsets into screen
+GAME_OVER_MSG_OFFSET = (HEIGHT / 2) * WIDTH + WIDTH / 2 - 5
+WINNER_MSG_OFFSET = (HEIGHT / 2 + 2) * WIDTH + WIDTH / 2 - 5
+
 	.data
 
 ###################################
@@ -1107,11 +1111,11 @@ fire__impacts_ok:			# }
 
 	lw	$t0, nimpacts		# impacts[nimpacts++] = projectile.pos;
 	mul	$t1, $t0, SIZEOF_POINT	#
-	lw	$t2, projectile + PROJECTILE_POS_OFFSET + POINT_X_OFFSET
+	lw	$t2, projectile + PROJECTILE_POS_X_OFFSET
 					#
 	sw	$t2, impacts + POINT_X_OFFSET($t1)
 					#
-	lw	$t2, projectile + PROJECTILE_POS_OFFSET + POINT_Y_OFFSET
+	lw	$t2, projectile + PROJECTILE_POS_Y_OFFSET
 					#
 	sw	$t2, impacts + POINT_Y_OFFSET($t1)
 					#
@@ -1190,7 +1194,7 @@ render_end_screen__winner_step:
 					# }
 render_end_screen__winner_end:
 
-	la	$a0, screen + (HEIGHT / 2) * WIDTH + WIDTH / 2 - 5
+	la	$a0, screen + GAME_OVER_MSG_OFFSET
 					# memcpy(&screen[HEIGHT / 2][WIDTH / 2 - 5], "Game Over!", 10);
 	la	$a1, render_end_screen_str_1
 					#
@@ -1209,7 +1213,7 @@ render_end_screen__someone_wins:
 	mul	$t1, $s0, SIZEOF_PTR	#
 	lw	$a1, msg_for_worm($t1)	#
 render_end_screen__copy_message:
-	la	$a0, screen + (HEIGHT / 2 + 2) * WIDTH + WIDTH / 2 - 5
+	la	$a0, screen + WINNER_MSG_OFFSET
 					# memcpy(&screen[HEIGHT / 2 + 2][WIDTH / 2 - 5], ..., 12);
 	li	$a2, 12			#
 	jal	copy_bytes		#
