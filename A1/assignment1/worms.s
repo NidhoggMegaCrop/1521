@@ -755,21 +755,87 @@ render_worms__epilogue:
 overlaps_with_terrain:
 	# Subset:   2
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Returns TRUE if any cell of the width x height rectangle with top-left corner (x, y) lies on terrain, otherwise FALSE.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[$ra, $s0, $s1, $s2, $s3, $s4, $s5]
+	# Uses:		[$a0, $a1, $a2, $a3, $v0, $t0, $s0, $s1, $s2, $s3, $s4, $s5]
+	# Clobbers: 	[$a0, $a1, $v0, $t0]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $s0: int x
+	#   - $s1: int y
+	#   - $s2: int width
+	#   - $s3: int height
+	#   - $s4: int check_x
+	#   - $s5: int check_y
+	#   - $t0: temporary (check_x - x / check_y - y)
+	#
+	# Structure:
 	#   overlaps_with_terrain
 	#   -> [prologue]
 	#	   -> body
+	#	      -> x_init, x_cond, x_body, x_step, x_end
+	#	      -> y_init, y_cond, y_body, y_step, y_end
+	#	      -> overlaps
 	#   -> [epilogue]
 overlaps_with_terrain__prologue:
+	push	$ra
+	push	$s0
+	push	$s1
+	push	$s2
+	push	$s3
+	push	$s4
+	push	$s5
 overlaps_with_terrain__body:
+	move	$s0, $a0		# (keep the arguments across the calls)
+	move	$s1, $a1		#
+	move	$s2, $a2		#
+	move	$s3, $a3		#
+
+overlaps_with_terrain__x_init:
+	move	$s4, $s0		# int check_x = x;
+overlaps_with_terrain__x_cond:
+	sub	$t0, $s4, $s0		# while (check_x - x < width) {
+	bge	$t0, $s2, overlaps_with_terrain__x_end
+					#
+overlaps_with_terrain__x_body:
+overlaps_with_terrain__y_init:
+	move	$s5, $s1		#     int check_y = y;
+overlaps_with_terrain__y_cond:
+	sub	$t0, $s5, $s1		#     while (check_y - y < height) {
+	bge	$t0, $s3, overlaps_with_terrain__y_end
+					#
+overlaps_with_terrain__y_body:
+	move	$a0, $s4		#         if (collides_with_terrain(check_x, check_y) != NO_TERRAIN) {
+	move	$a1, $s5		#
+	jal	collides_with_terrain	#
+	bne	$v0, NO_TERRAIN, overlaps_with_terrain__overlaps
+					#             return TRUE;
+					#         }
+overlaps_with_terrain__y_step:
+	add	$s5, $s5, 1		#         check_y++;
+	b	overlaps_with_terrain__y_cond
+					#     }
+overlaps_with_terrain__y_end:
+overlaps_with_terrain__x_step:
+	add	$s4, $s4, 1		#     check_x++;
+	b	overlaps_with_terrain__x_cond
+					# }
+overlaps_with_terrain__x_end:
+
+	li	$v0, FALSE		# return FALSE;
+	b	overlaps_with_terrain__epilogue
+					#
+overlaps_with_terrain__overlaps:
+	li	$v0, TRUE		# return TRUE;
 overlaps_with_terrain__epilogue:
+	pop	$s5
+	pop	$s4
+	pop	$s3
+	pop	$s2
+	pop	$s1
+	pop	$s0
+	pop	$ra
 	jr	$ra
 
 ################################################################################
@@ -778,24 +844,92 @@ overlaps_with_terrain__epilogue:
 move:
 	# Subset:   2
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Moves the active worm one cell left or right (climbing up one block if needed), lets worms fall, then redraws the screen.
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[$ra, $s0]
+	# Uses:		[$a0, $a1, $v0, $t0, $t1, $t2, $s0]
+	# Clobbers: 	[$a0, $a1, $v0, $t0, $t1, $t2]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $s0: int new_x
+	#   - $t0: int dx
+	#   - $t1: active_worm * SIZEOF_WORM (offset of the active worm)
+	#   - $t2: temporary (worms[active_worm].pos.x / worms[active_worm].pos.y)
+	#
+	# Structure:
 	#   move
 	#   -> [prologue]
 	#	   -> body
+	#	      -> dx_left, dx_set
+	#	      -> blocked_check, climb, update_x
 	#   -> [epilogue]
 move__prologue:
+	push	$ra
+	push	$s0
 move__body:
-move__epilogue:
+	li	$t0, 1			# int dx = direction == LEFT ? -1 : 1;
+	bne	$a0, LEFT, move__dx_set	#
+move__dx_left:
+	li	$t0, -1			#
+move__dx_set:
+
+	lw	$t1, active_worm	# int new_x = worms[active_worm].pos.x + dx;
+	mul	$t1, $t1, SIZEOF_WORM	#
+	lw	$t2, worms + WORM_POS_OFFSET + POINT_X_OFFSET($t1)
+					#
+	add	$s0, $t2, $t0		#
+
+	bltz	$s0, move__epilogue	# if (new_x < 0 ...
+	bge	$s0, WIDTH, move__epilogue
+					# ... || new_x >= WIDTH) { return; }
+
+move__blocked_check:
+	lw	$t1, active_worm	# if (collides_with_terrain(new_x, worms[active_worm].pos.y) != NO_TERRAIN) {
+	mul	$t1, $t1, SIZEOF_WORM	#
+	move	$a0, $s0		#
+	lw	$a1, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+					#
+	jal	collides_with_terrain	#
+	beq	$v0, NO_TERRAIN, move__update_x
+					#
+
+move__climb:
+	lw	$t1, active_worm	#     if (worms[active_worm].pos.y > 0 ...
+	mul	$t1, $t1, SIZEOF_WORM	#
+	lw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+					#
+	blez	$t2, move__epilogue	#     ... else { return; }
+
+	move	$a0, $s0		#     ... && collides_with_terrain(new_x, worms[active_worm].pos.y - 1) == NO_TERRAIN) {
+	sub	$a1, $t2, 1		#
+	jal	collides_with_terrain	#
+	bne	$v0, NO_TERRAIN, move__epilogue
+					#     ... else { return; }
+
+	lw	$t1, active_worm	#         worms[active_worm].pos.y--;
+	mul	$t1, $t1, SIZEOF_WORM	#
+	lw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+					#
+	sub	$t2, $t2, 1		#
+	sw	$t2, worms + WORM_POS_OFFSET + POINT_Y_OFFSET($t1)
+					#     }
+					# }
+move__update_x:
+	lw	$t1, active_worm	# worms[active_worm].pos.x = new_x;
+	mul	$t1, $t1, SIZEOF_WORM	#
+	sw	$s0, worms + WORM_POS_OFFSET + POINT_X_OFFSET($t1)
+					#
+
+	jal	let_worms_fall		# let_worms_fall();
+
+	li	$a0, TRUE		# render(TRUE);
+	jal	render			#
+
+	jal	display			# display();
+move__epilogue:				# return;
+	pop	$s0
+	pop	$ra
 	jr	$ra
-
-
 
 ################################################################################
 # .TEXT <render_projectile>
@@ -803,26 +937,101 @@ move__epilogue:
 render_projectile:
 	# Subset:   2
 	#
-	# Frame:	[...]   <-- FILL THESE OUT!
-	# Uses:		[...]
-	# Clobbers: 	[...]
+	# Description: Draws the projectile and its trail onto the screen buffer (the aim guide is drawn with trail characters only).
 	#
-	# Locals:		<-- FILL THIS OUT!
-	#   - ...
+	# Frame:	[$ra, $s0, $s1]
+	# Uses:		[$a0, $a1, $v0, $t0, $t1, $t2, $t3, $s0, $s1]
+	# Clobbers: 	[$a0, $a1, $v0, $t0, $t1, $t2, $t3]
 	#
-	# Structure:		<-- FILL THIS OUT!
+	# Locals:
+	#   - $s0: struct projectile *p
+	#   - $s1: int i
+	#   - $t0: temporary (p->pos.y / address of p->trail[i])
+	#   - $t1: temporary (&aim_guide / p->pos.x)
+	#   - $t2: temporary (offset into screen)
+	#   - $t3: character to draw
+	#
+	# Structure:
 	#   render_projectile
 	#   -> [prologue]
 	#	   -> body
+	#	      -> on_screen, above_screen
+	#	      -> trail_init, trail_cond, trail_body, trail_step, trail_end
 	#   -> [epilogue]
 render_projectile__prologue:
+	push	$ra
+	push	$s0
+	push	$s1
 render_projectile__body:
+	move	$s0, $a0		# (keep p across the calls)
+
+	lw	$t0, PROJECTILE_POS_OFFSET + POINT_Y_OFFSET($s0)
+					# if (p->pos.y >= 0) {
+	bltz	$t0, render_projectile__above_screen
+					#
+render_projectile__on_screen:
+	lw	$t1, PROJECTILE_POS_OFFSET + POINT_X_OFFSET($s0)
+					#     screen[p->pos.y][p->pos.x] = p == &aim_guide ? TRAIL_CHAR : PROJECTILE_CHAR;
+	mul	$t2, $t0, WIDTH		#
+	add	$t2, $t2, $t1		#
+	li	$t3, PROJECTILE_CHAR	#
+	la	$t1, aim_guide		#
+	bne	$s0, $t1, render_projectile__draw_head
+					#
+	li	$t3, TRAIL_CHAR		#
+render_projectile__draw_head:
+	sb	$t3, screen($t2)	#
+	b	render_projectile__trail_init
+					# } else {
+render_projectile__above_screen:
+	la	$t1, aim_guide		#     if (p != &aim_guide) {
+	beq	$s0, $t1, render_projectile__trail_init
+					#
+	lw	$t1, PROJECTILE_POS_OFFSET + POINT_X_OFFSET($s0)
+					#         screen[0][p->pos.x] = PROJECTILE_ABOVE_CHAR;
+	li	$t3, PROJECTILE_ABOVE_CHAR
+					#
+	sb	$t3, screen($t1)	#     }
+					# }
+
+render_projectile__trail_init:
+	li	$s1, 0			# int i = 0;
+render_projectile__trail_cond:
+	lw	$t0, PROJECTILE_TRAIL_LENGTH_OFFSET($s0)
+					# while (i < p->trail_length) {
+	bge	$s1, $t0, render_projectile__trail_end
+					#
+render_projectile__trail_body:
+	mul	$t0, $s1, SIZEOF_POINT	#     if (!in_bounds(p->trail[i].x, p->trail[i].y)) { continue; }
+	add	$t0, $t0, $s0		#
+	lw	$a0, PROJECTILE_TRAIL_OFFSET + POINT_X_OFFSET($t0)
+					#
+	lw	$a1, PROJECTILE_TRAIL_OFFSET + POINT_Y_OFFSET($t0)
+					#
+	jal	in_bounds		#
+	beqz	$v0, render_projectile__trail_step
+					#
+
+	mul	$t0, $s1, SIZEOF_POINT	#     screen[p->trail[i].y][p->trail[i].x] = TRAIL_CHAR;
+	add	$t0, $t0, $s0		#
+	lw	$t1, PROJECTILE_TRAIL_OFFSET + POINT_X_OFFSET($t0)
+					#
+	lw	$t2, PROJECTILE_TRAIL_OFFSET + POINT_Y_OFFSET($t0)
+					#
+	mul	$t2, $t2, WIDTH		#
+	add	$t2, $t2, $t1		#
+	li	$t3, TRAIL_CHAR		#
+	sb	$t3, screen($t2)	#
+render_projectile__trail_step:
+	add	$s1, $s1, 1		#     i++;
+	b	render_projectile__trail_cond
+					# }
+render_projectile__trail_end:
 render_projectile__epilogue:
+	pop	$s1
+	pop	$s0
+	pop	$ra
 	jr	$ra
-
-
-
-
 
 ##############
 ## SUBSET 3 ##
